@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import ProjectCard from "../../components/ProjectCard";
 
 const projects = [
@@ -18,7 +21,14 @@ const projects = [
 export default function ProjectsPage() {
   return (
     <main className="container">
-      <h1>Project Marketplace</h1>
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{ marginBottom: "24px" }}
+      >
+        Project Marketplace
+      </motion.h1>
+
       <div className="grid">
         {projects.map((p) => (
           <ProjectCard key={p.id} project={p} />
