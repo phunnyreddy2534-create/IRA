@@ -2,10 +2,32 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const isAdmin = user?.email?.endsWith("@admin.com");
 
   const NavLink = ({ href, label }: { href: string; label: string }) => {
     const active = pathname === href;
@@ -37,6 +59,11 @@ export default function Navbar() {
     );
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
   return (
     <motion.nav
       initial={{ y: -40, opacity: 0 }}
@@ -59,10 +86,37 @@ export default function Navbar() {
         IRA
       </Link>
 
-      <div style={{ display: "flex", gap: "18px" }}>
+      <div style={{ display: "flex", gap: "18px", marginLeft: "auto" }}>
         <NavLink href="/projects" label="Projects" />
-        <NavLink href="/upload" label="Upload" />
-        <NavLink href="/auth/login" label="Login" />
+        <NavLink href="/news" label="News" />
+
+        {user && <NavLink href="/upload" label="Upload" />}
+
+        {isAdmin && <NavLink href="/admin" label="Admin" />}
+
+        {!user && (
+          <>
+            <NavLink href="/auth/login" label="Login" />
+            <NavLink href="/auth/signup" label="Sign Up" />
+          </>
+        )}
+
+        {user && (
+          <>
+            <NavLink href="/profile" label="Profile" />
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9ca3af",
+                cursor: "pointer",
+              }}
+            >
+              Logout
+            </button>
+          </>
+        )}
       </div>
     </motion.nav>
   );
