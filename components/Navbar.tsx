@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase, ensureProfile } from "../lib/supabaseClient";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -23,28 +23,24 @@ export default function Navbar() {
       return;
     }
 
+    // ✅ ensure profile exists
+    await ensureProfile(sessionUser);
+
     const { data, error } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", sessionUser.id)
       .single();
 
-    if (!error) {
-      setRole(data?.role ?? "user");
-    } else {
-      setRole("user");
-    }
-
+    setRole(!error && data?.role ? data.role : "user");
     setLoading(false);
   };
 
   useEffect(() => {
-    // ✅ Load persisted session (hard refresh safe)
     supabase.auth.getSession().then(({ data }) => {
       loadUserAndRole(data.session?.user || null);
     });
 
-    // ✅ Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         loadUserAndRole(session?.user || null);
@@ -93,7 +89,6 @@ export default function Navbar() {
     router.push("/");
   };
 
-  // ⛔ Prevent flicker until auth is resolved
   if (loading) return null;
 
   return (
