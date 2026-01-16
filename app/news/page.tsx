@@ -13,9 +13,17 @@ export default async function NewsPage() {
 
       <div className="grid" style={{ marginTop: 24 }}>
         {data?.map((n) => (
-          <div key={n.id} className="card">
-            {n.title}
-          </div>
+          <a
+            key={n.id}
+            href={n.source_url}
+            target="_blank"
+            className="card"
+          >
+            <strong>{n.title}</strong>
+            <p style={{ color: "#9ca3af", marginTop: 6 }}>
+              {n.source}
+            </p>
+          </a>
         ))}
       </div>
     </main>
