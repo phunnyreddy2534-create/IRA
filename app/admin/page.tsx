@@ -8,10 +8,10 @@ export default function AdminPage() {
   const [projects, setProjects] = useState<any[]>([]);
 
   useEffect(() => {
-    load();
+    loadProjects();
   }, []);
 
-  const load = async () => {
+  const loadProjects = async () => {
     const { data } = await supabase
       .from("projects")
       .select("*")
@@ -20,14 +20,19 @@ export default function AdminPage() {
     setProjects(data || []);
   };
 
-  const approve = async (id: string) => {
+  const approveProject = async (id: string) => {
     await supabase.from("projects").update({ status: "approved" }).eq("id", id);
-    load();
+    loadProjects();
   };
 
-  const remove = async (id: string) => {
+  const rejectProject = async (id: string) => {
+    await supabase.from("projects").update({ status: "rejected" }).eq("id", id);
+    loadProjects();
+  };
+
+  const deleteProject = async (id: string) => {
     await supabase.from("projects").delete().eq("id", id);
-    load();
+    loadProjects();
   };
 
   return (
@@ -40,15 +45,26 @@ export default function AdminPage() {
         <div key={p.id} className="card" style={{ marginTop: 16 }}>
           <strong>{p.title}</strong>
           <p>{p.description}</p>
-          <p>Status: {p.status}</p>
+          <p style={{ color: "#9ca3af" }}>Status: {p.status}</p>
 
-          <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
             {p.status !== "approved" && (
-              <button className="btn" onClick={() => approve(p.id)}>
+              <button className="btn" onClick={() => approveProject(p.id)}>
                 Approve
               </button>
             )}
-            <button className="btn" onClick={() => remove(p.id)}>
+
+            {p.status !== "rejected" && (
+              <button className="btn" onClick={() => rejectProject(p.id)}>
+                Reject
+              </button>
+            )}
+
+            <button
+              className="btn"
+              style={{ background: "#dc2626" }}
+              onClick={() => deleteProject(p.id)}
+            >
               Delete
             </button>
           </div>
