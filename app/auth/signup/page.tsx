@@ -2,14 +2,29 @@
 
 import { motion } from "framer-motion";
 import { supabase } from "../../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+  const router = useRouter();
+
   const handleSignup = async (e: any) => {
     e.preventDefault();
+
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    // ✅ redirect after signup
+    router.push("/");
   };
 
   return (
@@ -29,12 +44,7 @@ export default function SignupPage() {
       >
         <input type="text" placeholder="Name" />
         <input name="email" type="email" placeholder="Email" required />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-        />
+        <input name="password" type="password" placeholder="Password" required />
         <button className="btn" type="submit">
           Sign Up
         </button>
