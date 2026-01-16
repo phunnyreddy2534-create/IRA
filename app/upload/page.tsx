@@ -9,7 +9,7 @@ export default function UploadPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const load = async () => {
+    const init = async () => {
       const { data } = await supabase.auth.getSession();
       const user = data.session?.user;
 
@@ -27,7 +27,7 @@ export default function UploadPage() {
       setRole(profile?.role === "admin" ? "admin" : "user");
     };
 
-    load();
+    init();
   }, [router]);
 
   if (!role) return null;
@@ -54,17 +54,18 @@ export default function UploadPage() {
   };
 
   return (
-    <main className="container" style={{ maxWidth: "600px" }}>
+    <main className="container" style={{ maxWidth: 600 }}>
       <h1>{role === "admin" ? "Admin Upload Project" : "Submit Your Project"}</h1>
+
+      <p style={{ color: "#9ca3af" }}>
+        {role === "admin"
+          ? "Published instantly"
+          : "Requires admin approval"}
+      </p>
 
       <form
         onSubmit={handleSubmit}
-        style={{
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "14px",
-        }}
+        style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 14 }}
       >
         <input name="title" placeholder="Project Title" required />
         <textarea name="description" placeholder="Project Description" required />
