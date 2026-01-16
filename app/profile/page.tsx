@@ -10,11 +10,12 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        router.push("/auth/login");
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session?.user) {
+        router.replace("/auth/login");
+      } else {
+        setUser(data.session.user);
       }
-      setUser(data.user);
     });
   }, [router]);
 
@@ -30,7 +31,7 @@ export default function ProfilePage() {
         Email: {user.email}
       </p>
 
-      <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+      <div style={{ marginTop: "24px" }}>
         <button className="btn" onClick={() => router.push("/upload")}>
           Upload Project
         </button>
