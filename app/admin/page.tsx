@@ -16,18 +16,18 @@ export default function AdminPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push("/");
+        router.replace("/");
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
 
-      if (profile?.role !== "admin") {
-        router.push("/");
+      if (data?.role !== "admin") {
+        router.replace("/");
       } else {
         setAllowed(true);
       }
@@ -36,9 +36,9 @@ export default function AdminPage() {
     checkAdmin();
   }, [router]);
 
- if (!allowed) {
-  return <p className="container">Checking permissions...</p>;
-}
+  if (!allowed) {
+    return <p className="container">Checking permissions…</p>;
+  }
 
   return (
     <main className="container">
