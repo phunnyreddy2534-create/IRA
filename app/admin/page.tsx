@@ -10,30 +10,29 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const verify = async () => {
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
 
       if (!user) {
         router.replace("/");
         return;
       }
 
-      const { data } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
 
-      if (data?.role !== "admin") {
+      if (profile?.role !== "admin") {
         router.replace("/");
       } else {
         setAllowed(true);
       }
     };
 
-    checkAdmin();
+    verify();
   }, [router]);
 
   if (!allowed) {
