@@ -2,14 +2,29 @@
 
 import { motion } from "framer-motion";
 import { supabase } from "../../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const handleLogin = async (e: any) => {
     e.preventDefault();
+
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    // ✅ redirect after login
+    router.push("/");
   };
 
   return (
@@ -28,12 +43,7 @@ export default function LoginPage() {
         }}
       >
         <input name="email" type="email" placeholder="Email" required />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-        />
+        <input name="password" type="password" placeholder="Password" required />
         <button className="btn" type="submit">
           Login
         </button>
