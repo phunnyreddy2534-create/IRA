@@ -6,21 +6,37 @@ import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
   const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<"admin" | "user">("user");
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
+    const load = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
         router.push("/auth/login");
-      } else {
-        setUser(data.user);
+        return;
       }
-    });
+
+      setUser(user);
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      setRole(data?.role === "admin" ? "admin" : "user");
+    };
+
+    load();
   }, [router]);
 
   if (!user) return null;
 
-  const isAdmin = user.email?.endsWith("@admin.com");
+  const isAdmin = role === "admin";
 
   return (
     <main className="container" style={{ maxWidth: "600px" }}>
@@ -28,8 +44,8 @@ export default function UploadPage() {
 
       <p style={{ color: "#9ca3af", marginTop: "8px" }}>
         {isAdmin
-          ? "Projects uploaded by admin go live instantly."
-          : "Your project will be reviewed before publishing."}
+          ? "Projects published instantly."
+          : "Projects require admin approval."}
       </p>
 
       <form
