@@ -10,12 +10,14 @@ const projects = [
     title: "AI Phishing Detection",
     description: "Multi-agent ML-based phishing & smishing detection system",
     price: "₹999",
+    status: "approved",
   },
   {
     id: "2",
     title: "Student Attendance System",
     description: "Smart attendance using face recognition",
     price: "₹799",
+    status: "approved",
   },
 ];
 
@@ -40,15 +42,11 @@ export default function ProjectsPage() {
       <div className="grid">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="card"
-                style={{ height: "180px", opacity: 0.6 }}
-              />
+              <div key={i} className="card" style={{ height: "180px" }} />
             ))
-          : projects.map((p) => (
-              <ProjectCard key={p.id} project={p} />
-            ))}
+          : projects
+              .filter((p) => p.status === "approved")
+              .map((p) => <ProjectCard key={p.id} project={p} />)}
       </div>
     </main>
   );
