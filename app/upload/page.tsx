@@ -47,7 +47,7 @@ export default function UploadPage() {
       description,
       price,
       status: role === "admin" ? "approved" : "pending",
-      created_by: user?.id,
+      owner_id: user?.id,
     });
 
     router.push("/projects");
@@ -65,7 +65,12 @@ export default function UploadPage() {
 
       <form
         onSubmit={handleSubmit}
-        style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 14 }}
+        style={{
+          marginTop: 20,
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+        }}
       >
         <input name="title" placeholder="Project Title" required />
         <textarea name="description" placeholder="Project Description" required />
