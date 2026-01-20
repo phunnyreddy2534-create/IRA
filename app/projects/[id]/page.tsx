@@ -59,13 +59,6 @@ export default function ProjectPreview({ params }: Props) {
       return;
     }
 
-    await supabase.from("orders").insert({
-      project_id: params.id,
-      user_id: user.id,
-      amount: 10,
-      status: "paid",
-    });
-
     setOwned(true);
     alert("Purchase successful. Download unlocked.");
   };
