@@ -1,11 +1,12 @@
 "use client";
 
-import { supabase } from "../../lib/supabaseClient";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function AdminPage() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -20,19 +21,28 @@ export default function AdminPage() {
     setProjects(data || []);
   };
 
-  const approveProject = async (id: string) => {
-    await supabase.from("projects").update({ status: "approved" }).eq("id", id);
-    loadProjects();
-  };
+  const runAdminAction = async (
+    action: "approve" | "reject" | "delete",
+    projectId: string
+  ) => {
+    try {
+      setLoading(true);
 
-  const rejectProject = async (id: string) => {
-    await supabase.from("projects").update({ status: "rejected" }).eq("id", id);
-    loadProjects();
-  };
+      const res = await fetch("/api/admin/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, projectId }),
+      });
 
-  const deleteProject = async (id: string) => {
-    await supabase.from("projects").delete().eq("id", id);
-    loadProjects();
+      if (!res.ok) {
+        console.error("Admin action failed");
+        return;
+      }
+
+      await loadProjects();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,13 +59,21 @@ export default function AdminPage() {
 
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
             {p.status !== "approved" && (
-              <button className="btn" onClick={() => approveProject(p.id)}>
+              <button
+                className="btn"
+                disabled={loading}
+                onClick={() => runAdminAction("approve", p.id)}
+              >
                 Approve
               </button>
             )}
 
             {p.status !== "rejected" && (
-              <button className="btn" onClick={() => rejectProject(p.id)}>
+              <button
+                className="btn"
+                disabled={loading}
+                onClick={() => runAdminAction("reject", p.id)}
+              >
                 Reject
               </button>
             )}
@@ -63,7 +81,8 @@ export default function AdminPage() {
             <button
               className="btn"
               style={{ background: "#dc2626" }}
-              onClick={() => deleteProject(p.id)}
+              disabled={loading}
+              onClick={() => runAdminAction("delete", p.id)}
             >
               Delete
             </button>
