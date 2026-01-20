@@ -11,8 +11,10 @@ interface Props {
 
 export default function ProjectPreview({ params }: Props) {
   const router = useRouter();
+
   const [owned, setOwned] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   // ✅ Ownership check (created OR paid)
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function ProjectPreview({ params }: Props) {
 
       const { data: order } = await supabase
         .from("orders")
-        .select("id,status")
+        .select("id")
         .eq("project_id", params.id)
         .eq("user_id", user.id)
         .in("status", ["created", "paid"])
@@ -52,9 +54,7 @@ export default function ProjectPreview({ params }: Props) {
 
     const res = await fetch("/api/orders/create", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         projectId: params.id,
         amount: 10,
@@ -70,38 +70,30 @@ export default function ProjectPreview({ params }: Props) {
     alert("Order created. Download unlocked.");
   };
 
-  // ⚠️ TEMPORARY (Phase 6B will secure this)
+  // 🔒 SECURE DOWNLOAD (server-authorized, signed URL)
   const handleDownload = async () => {
-    const { data } = await supabase.auth.getSession();
-    const user = data.session?.user;
-    if (!user) return;
+    try {
+      setDownloading(true);
 
-    const { data: project } = await supabase
-      .from("projects")
-      .select("file_path")
-      .eq("id", params.id)
-      .single();
+      const res = await fetch(`/api/download/${params.id}`);
 
-    if (!project?.file_path) {
-      alert("File not available yet.");
-      return;
+      if (!res.ok) {
+        alert("You are not authorized to download this file.");
+        return;
+      }
+
+      const { url } = await res.json();
+
+      if (!url) {
+        alert("Download link unavailable.");
+        return;
+      }
+
+      // Browser handles the signed URL
+      window.location.href = url;
+    } finally {
+      setDownloading(false);
     }
-
-    const { data: file, error } = await supabase.storage
-      .from("project-files")
-      .download(project.file_path);
-
-    if (error) {
-      alert("Access denied.");
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "project.zip";
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   if (loading) return null;
@@ -150,9 +142,10 @@ export default function ProjectPreview({ params }: Props) {
           whileHover={{ scale: 1.05 }}
           className="btn"
           style={{ marginTop: "28px" }}
+          disabled={downloading}
           onClick={handleDownload}
         >
-          Download Project
+          {downloading ? "Preparing download…" : "Download Project"}
         </motion.button>
       )}
     </main>
