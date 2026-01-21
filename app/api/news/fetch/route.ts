@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import slugify from "slugify";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// ✅ Lightweight slug generator (no dependency)
+function makeSlug(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 
 export async function GET(req: Request) {
   // 🔐 Cron protection
@@ -29,10 +38,7 @@ export async function GET(req: Request) {
       for (const article of articles) {
         if (!article.title || !article.url) continue;
 
-        const slug = slugify(article.title, {
-          lower: true,
-          strict: true,
-        });
+        const slug = makeSlug(article.title);
 
         // 🚫 Avoid duplicates
         const { data: exists } = await supabase
