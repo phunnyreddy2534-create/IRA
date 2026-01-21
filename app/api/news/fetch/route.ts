@@ -7,13 +7,16 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET() {
+export async function GET(req: Request) {
+  // 🔐 Cron protection
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
   try {
     const apiKey = process.env.NEWS_API_KEY!;
-    const categories = [
-      "technology",
-      "business",
-    ];
+    const categories = ["technology", "business"];
 
     for (const category of categories) {
       const res = await fetch(
@@ -31,7 +34,7 @@ export async function GET() {
           strict: true,
         });
 
-        // Avoid duplicates
+        // 🚫 Avoid duplicates
         const { data: exists } = await supabase
           .from("news")
           .select("id")
@@ -48,15 +51,16 @@ export async function GET() {
           source: article.source?.name || "NewsAPI",
           source_url: article.url,
           image_url: article.urlToImage,
-          category: category,
+          category,
           published_at: article.publishedAt,
           is_auto: true,
+          is_active: true,
         });
       }
     }
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch (error) {
     return NextResponse.json(
       { error: "News fetch failed" },
       { status: 500 }
